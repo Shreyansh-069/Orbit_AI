@@ -1,0 +1,10 @@
+langgraph
+langchain
+langchain-community 
+langchain-openai
+python-dotenv
+transformers
+torch
+pillow
+tavily-python
+streamlit
