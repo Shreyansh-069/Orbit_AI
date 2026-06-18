@@ -1,152 +1,186 @@
-# 🔭 Orbit AI — Multi-Agent Research Assistant
+# 🔭 Orbit AI — Your Research Co-Pilot That Actually Knows Who To Ask
 
-A multi-agent AI pipeline built with **LangGraph**, **Gemini Vision**, **Tavily**, and **PDF RAG**, wrapped in a Streamlit UI. Ask questions, upload PDFs, and analyse images — all in one place.
+> Ask a question. Drop a PDF. Throw in an image. Orbit figures out which specialist agent should handle what — then hands you one clean, synthesized, fact-checked answer instead of three messy ones.
 
----
+No more juggling separate tools for "summarize this PDF," "what's in this image," and "search this for me." One query box. One pipeline. One answer — built by a supervisor that knows exactly which agent to wake up for the job.
 
-## ✨ Features
-
-- **🧠 Supervisor Agent** — Orchestrates the pipeline, decides which specialist agents to invoke based on the query and available inputs
-- **📄 PDF Agent** — Extracts and reasons over uploaded PDF documents using RAG (Retrieval-Augmented Generation)
-- **🖼 Image Agent** — Understands and describes uploaded images using Gemini Vision
-- **🌐 Web Agent** — Searches the web in real time using Tavily to answer current-events or factual queries
-- **✨ Synthesizer** — Combines outputs from all active agents into a single coherent response
-- **🎯 Evaluator** — Scores the final response on accuracy, hallucination rate, and completeness
-- **Live agent flow map** — Visual pipeline showing which agents are idle, active, or done in real time
+### 🌐 [Try it live → orbit-ai.streamlit.app](https://orbit-ai.streamlit.app/)
 
 ---
 
-## 🗂 Project Structure
+## ✨ What Makes Orbit Different
 
-```
-├── app.py              # Streamlit UI — all frontend logic and agent flow map
-├── main.py             # LangGraph graph definition and compiled_graph export
-├── agents.py           # Individual agent implementations (supervisor, pdf, image, web, synthesizer, evaluator)
-├── config.py           # API keys, model names, and shared configuration
-├── engine.py           # Pipeline execution helpers and state utilities
-├── requirements.txt    # Python dependencies
-└── README.md
-```
+Most "AI assistant" demos either hardcode a single tool or blindly call every tool every time, wasting calls and money. Orbit does neither — it **routes**.
 
----
-
-## ⚙️ Setup
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/Shreyansh-069/orbit-ai.git
-cd orbit-ai
-```
-
-### 2. Create a virtual environment
-
-```bash
-python -m venv venv
-source venv/bin/activate        # macOS / Linux
-venv\Scripts\activate           # Windows
-```
-
-### 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Configure API keys
-
-Create a `.env` file in the project root:
-
-```env
-GOOGLE_API_KEY=your_gemini_api_key
-TAVILY_API_KEY=your_tavily_api_key
-```
-
-Or set them directly in `config.py`.
-
-### 5. Run the app
-
-```bash
-streamlit run app.py
-```
-
-The app will open at `http://localhost:8501`.
-
----
-
-## 🚀 Usage
-
-| Goal | What to do |
+| | |
 |---|---|
-| Ask a general question | Type your query and click **Run Pipeline** — the web agent searches in real time |
-| Analyse a PDF | Upload a `.pdf` file, type your question, then run |
-| Understand an image | Upload a `.jpg`, `.png`, or `.webp`, type your question, then run |
-| Combine PDF + image | Upload both, ask a question that spans both sources |
+| 🧠 | **Smart routing** — a planner inspects your inputs and only activates the agents actually needed |
+| 📄 | **PDF Agent** — extracts and reasons over up to 15 pages of any uploaded document |
+| 🖼 | **Vision Agent** — reads charts, screenshots, photos, and scanned text using Gemini Vision |
+| 🌐 | **Web Agent** — pulls real-time grounding from the live web via Tavily, every single run |
+| ✨ | **Synthesizer** — merges every agent's findings into one polished, de-duplicated Markdown answer |
+| 🎯 | **Evaluator** — independently scores the final answer for accuracy, hallucination risk, and completeness |
+| 📊 | **Live pipeline map** — watch exactly which agent is active, done, or skipped, in real time |
+| 🪵 | **Full execution logs** — timestamps, durations, and a visual timeline bar for every run |
 
 ---
 
-## 📊 Output Tabs
+## 🖥 See It In Action
 
-After a run completes, results are shown across four tabs:
-
-- **💬 Response** — The final synthesized answer with web source links
-- **📊 Metrics** — Accuracy, hallucination rate, completeness scores, and total latency
-- **🪵 Execution Logs** — Per-agent log table with status, duration, and a visual timeline bar
-- **{ } Logs** — Raw JSON dump of execution logs, evaluation metrics, agent reports, and full pipeline state
+1. Type a question (or just attach a file and ask "what's in this?")
+2. Watch the **live agent flow map** light up as the Supervisor routes your request
+3. Get a synthesized answer in the **Response** tab, complete with cited web sources
+4. Dig into **Metrics**, **Execution Logs**, or raw **Logs** (JSON) if you want the receipts
 
 ---
 
-## 🧩 State Schema
+## 🏗 How It's Built
 
-The LangGraph pipeline passes a shared state dictionary between agents. Key fields:
-
-| Field | Type | Description |
-|---|---|---|
-| `messages` | `list` | Conversation history (LangChain messages) |
-| `image_path` | `str` | Temp path to uploaded image (empty if none) |
-| `pdf_path` | `str` | Temp path to uploaded PDF (empty if none) |
-| `current_task` | `str` | Human-readable label of the current step |
-| `used_agents` | `list` | Agents that have completed in order |
-| `agent_reports` | `dict` | Per-agent output summaries |
-| `execution_logs` | `list` | Structured log entries with timestamps and durations |
-| `evaluation_metrics` | `dict` | Accuracy, hallucination rate, completeness, reasoning |
-| `final_response` | `str` | The final answer shown to the user |
-
----
-
-## 🔑 Required API Keys
-
-| Service | Purpose | Get it at |
-|---|---|---|
-| Google Gemini | LLM + Vision (image understanding) | [aistudio.google.com](https://aistudio.google.com) |
-| Tavily | Real-time web search | [tavily.com](https://tavily.com) |
-
----
-
-## 📦 Key Dependencies
+Orbit is a **LangGraph state machine** wrapped in a **Streamlit** interface:
 
 ```
-streamlit
-langgraph
-langchain-core
-langchain-google-genai
-tavily-python
-Pillow
-pypdf / pdfplumber   # for PDF RAG
+                    ┌──────────────┐
+   User Query  ──▶  │  Supervisor  │  (planner_node)
+   + PDF/Image       └──────┬───────┘
+                            │ inspects inputs, builds task queue
+              ┌─────────────┼─────────────┐
+              ▼             ▼             ▼
+        📄 PDF Agent   🖼 Vision Agent  🌐 Web Agent
+       (RAG-style       (Gemini Vision)  (Tavily +
+        extraction)                       synthesis)
+              │             │             │
+              └─────────────┼─────────────┘
+                            ▼
+                    ✨ Synthesizer
+                  (merges all evidence
+                   into one clean answer)
+                            │
+                            ▼
+                    🎯 Evaluator
+              (scores accuracy, hallucination,
+                     completeness)
+                            │
+                            ▼
+                    Final Response
+                  → rendered in Streamlit
 ```
+
+Each specialist agent only runs if it's actually relevant — no PDF uploaded means the PDF Agent is skipped entirely (and shown as "skipped," not just absent, in the flow map). The Web Agent always runs to keep every answer grounded in current information.
 
 ---
 
-## 🛠 Customisation
+## 🧰 Tech Stack
 
-**Changing the model** — Update the model name in `config.py`.
+| Layer | Tool |
+|---|---|
+| Orchestration | [LangGraph](https://langchain-ai.github.io/langgraph/) — stateful, conditional multi-agent graph |
+| LLM | Google **Gemini** (`gemini-3.1-flash-lite`) via `langchain-google-genai` |
+| Web Search | [Tavily](https://tavily.com) real-time search API |
+| PDF Parsing | `pypdf` |
+| UI | [Streamlit](https://streamlit.io) |
+| Image Handling | `Pillow` |
 
-**Adding a new agent** — Define the agent function in `agents.py`, register it as a node in `main.py`, and add its name to the flow map node states in `app.py`'s `build_flow_map()`.
+---
 
-**Changing agent names** — If your agents use different internal names than `supervisor`, `pdf_agent`, `image_agent`, `web_agent`, `synthesizer`, `evaluator`, update the `node_state()` calls inside `build_flow_map()` in `app.py` to match.
+## 🚀 Getting It Running
+
+### 1. Clone & install
+
+Orbit uses [`uv`](https://docs.astral.sh/uv/) for dependency management — fast, reproducible, no `pip` ceremony.
+
+```bash
+git clone https://github.com/your-username/orbit-ai.git
+cd orbit-ai
+uv sync
+```
+
+Don't have `uv` yet?
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh   # macOS / Linux
+# or
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"   # Windows
+```
+
+### 2. Add your API keys
+
+Orbit needs two free API keys to function:
+
+| Key | Where to get it |
+|---|---|
+| `GOOGLE_API_KEY` | [aistudio.google.com](https://aistudio.google.com) |
+| `TAVILY_API_KEY` | [tavily.com](https://tavily.com) |
+
+**Pick whichever setup fits where you're running it:**
+
+**🖥 Running locally** — create a `.env` file in the project root:
+```env
+GOOGLE_API_KEY=your_key_here
+TAVILY_API_KEY=your_key_here
+```
+
+**☁️ Deploying on Streamlit Community Cloud** — there's no `.env` file in the cloud, so set your keys in **Settings → Secrets** in the Streamlit dashboard instead:
+```toml
+GOOGLE_API_KEY = "your_key_here"
+TAVILY_API_KEY = "your_key_here"
+```
+Orbit reads keys straight from the environment, so it doesn't care whether they came from `.env`, Streamlit secrets, or were typed into the sidebar — all three work, and the sidebar will simply show "✓ Both API keys are set" once it finds them.
+
+**🔑 No keys configured anywhere?** No problem — Orbit's sidebar has a built-in API key entry field, so anyone running the app can paste in their own keys for that session without touching any config file.
+
+### 3. Run it
+
+```bash
+uv run streamlit run app.py
+```
+
+Open `http://localhost:8501` and you're live.
+
+---
+
+## 📁 Project Structure
+
+```
+orbit-ai/
+├── app.py           # Streamlit UI — sidebar, live flow map, tabs, styling
+├── config.py        # Shared state schema + lazy API key / model factories
+├── engine.py        # LangGraph builder — supervisor routing logic
+├── agents.py        # The specialist agents: PDF, Vision, Web Research
+├── main.py          # Synthesizer + Evaluator nodes, final graph compile
+├── pyproject.toml   # Project dependencies (managed by uv)
+└── uv.lock          # Locked, reproducible dependency versions
+```
+
+| File | What it actually does |
+|---|---|
+| `config.py` | Defines `AgentState` (the shared data every node reads/writes) and lazily builds Gemini/Tavily clients — only created the moment they're needed, so missing keys never crash the app on startup |
+| `engine.py` | The `planner_node` — looks at what was uploaded, decides which agents belong in the queue, and wires up the conditional routing edges |
+| `agents.py` | Three independent node functions: `doc_analysis_node`, `vision_agent_node`, `web_research_node` — each one logs its own timing, status, and output |
+| `main.py` | `response_generator_node` (the Synthesizer) and `evaluation_node` (the Evaluator/judge), plus the final `compiled_graph` everything runs through |
+| `app.py` | Everything visual: the live pipeline map, status pills, response/metrics/logs tabs, and the API key sidebar |
+
+---
+
+## 🧪 What's Actually Happening Under the Hood
+
+1. Your query (plus optional PDF/image) becomes the initial `AgentState`
+2. The **Supervisor** builds a `pending_tasks` queue based on what you attached
+3. Each queued agent runs, appends its findings to a shared evidence pool, and updates `used_agents` + `execution_logs`
+4. The **Synthesizer** reads *all* collected evidence and writes one coherent Markdown response — no agent names, no pipeline jargon, just the answer
+5. The **Evaluator** acts as an independent judge, scoring the final answer against the original query and the raw evidence — catching potential hallucinations before you see them
+6. Streamlit streams every step live, so the flow map and status pill update node-by-node instead of going silent until the whole thing finishes
+
+---
+
+## 🛣 Ideas for Where This Could Go Next
+
+- Loop the Evaluator's score back into the graph — low scores trigger an automatic retry
+- Swap the PDF Agent's flat text extraction for proper chunked vector RAG for longer documents
+- Add a persistent vector-based memory layer for multi-turn follow-up questions
+- Multi-document support (multiple PDFs in one run, not just one)
 
 ---
 
 ## 📄 License
 
-MIT License. See `LICENSE` for details.
+MIT — do whatever you want with it, just don't blame me if the Evaluator gives your homework a 40/100.
